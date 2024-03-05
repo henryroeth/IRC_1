@@ -5,32 +5,29 @@
 extern "C" {
 
 int recognize_face(const char *username) {
-    // Replace this with your actual facial recognition logic
-    // Example: Load an image, detect faces, and return 0 for successful recognition
 
     cv::Mat image = cv::imread("path_to_image.jpg", cv::IMREAD_GRAYSCALE);
 
     if (image.empty()) {
         std::cerr << "Error loading image!" << std::endl;
-        return 1;  // Recognition failed
+        return 1;  // failed
     }
 
-    // Your facial recognition logic using OpenCV, e.g., detect faces
+    // openCV logic for facial detection
     std::vector<cv::Rect> faces;
     cv::CascadeClassifier faceCascade;
     if (!faceCascade.load("path_to_haarcascade.xml")) {
         std::cerr << "Error loading face detection model!" << std::endl;
-        return 1;  // Recognition failed
+        return 1;  // returns 1 if recognition failed
     }
 
     faceCascade.detectMultiScale(image, faces);
 
-    // Check if at least one face is detected
+    // check if at least one face is detected
     if (!faces.empty()) {
-        // Perform further processing or additional checks
-        return 0;  // Recognition successful
+        return 0;  // successful
     } else {
-        return 1;  // Recognition failed
+        return 1;  // failed
     }
 }
 
@@ -69,4 +66,4 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc, con
     return PAM_SUCCESS;
 }
 
-} // extern "C"
+}
