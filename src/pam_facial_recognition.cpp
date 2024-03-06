@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
+#include <pwd.h>
 
 std::string get_home_directory(const char *username) {
     struct passwd *pw = getpwnam(username);
