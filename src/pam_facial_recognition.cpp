@@ -1,6 +1,9 @@
 #include <iostream>
+#include <iomanip>
+#include <thread>
+#include <chrono>
 #include <opencv2/opencv.hpp>
-#include <pwd.h> // Include this header for getpwnam
+#include <pwd.h>
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
@@ -29,7 +32,7 @@ void perform_facial_recognition(const char *username) {
     // Load image and Haar cascade classifier
     cv::Mat image = cv::imread(imagePath);
     cv::CascadeClassifier faceCascade;
-    
+
     if (image.empty()) {
         std::cerr << "Error loading image!" << std::endl;
         return;
@@ -60,6 +63,14 @@ void perform_facial_recognition(const char *username) {
     }
 }
 
+void countdown(int seconds) {
+    for (int i = seconds; i > 0; --i) {
+        std::cout << "\rHold still! Time remaining: " << std::setw(2) << i << " seconds" << std::flush;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    std::cout << std::endl;
+}
+
 PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv) {
     const char *username;
     int pam_err = pam_get_user(pamh, &username, "Username: ");
@@ -67,6 +78,9 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
     if (pam_err != PAM_SUCCESS) {
         return PAM_AUTH_ERR;
     }
+
+    // Display countdown message
+    countdown(10);
 
     // Perform facial recognition without displaying graphics
     perform_facial_recognition(username);
