@@ -1,10 +1,6 @@
-// PAM module (pam_facial_recognition.cpp)
-
 #include <iostream>
-#include <unistd.h> // For getuid
-#include <sys/types.h>
-#include <pwd.h>
 #include <opencv2/opencv.hpp>
+#include <pwd.h> // Include this header for getpwnam
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
@@ -30,12 +26,38 @@ void perform_facial_recognition(const char *username) {
     std::cout << "Image path: " << imagePath << std::endl;
     std::cout << "Cascade path: " << cascadePath << std::endl;
 
-    // Now, communicate with the helper program to display the GUI
-    std::string helperCommand = "helper_program " + imagePath;
-    system(helperCommand.c_str());
+    // Load image and Haar cascade classifier
+    cv::Mat image = cv::imread(imagePath);
+    cv::CascadeClassifier faceCascade;
+    
+    if (image.empty()) {
+        std::cerr << "Error loading image!" << std::endl;
+        return;
+    }
 
-    // Print facial recognition accuracy
-    std::cout << "Facial recognition accuracy for user " << username << ": Always granted access." << std::endl;
+    if (!faceCascade.load(cascadePath)) {
+        std::cerr << "Error loading face detection model!" << std::endl;
+        return;
+    }
+
+    // Convert the image to grayscale for face detection
+    cv::Mat grayImage;
+    cv::cvtColor(image, grayImage, cv::COLOR_BGR2GRAY);
+
+    // Detect faces
+    std::vector<cv::Rect> faces;
+    faceCascade.detectMultiScale(grayImage, faces);
+
+    // Print the number of faces found
+    std::cout << "Number of faces detected: " << faces.size() << std::endl;
+
+    // Add your facial recognition logic here
+    // For a basic example, we'll consider it a match if at least one face is detected
+    if (!faces.empty()) {
+        std::cout << "Facial recognition accuracy for user " << username << ": Match found. Access granted." << std::endl;
+    } else {
+        std::cout << "Facial recognition accuracy for user " << username << ": No match found. Access denied." << std::endl;
+    }
 }
 
 PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv) {
@@ -46,7 +68,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
         return PAM_AUTH_ERR;
     }
 
-    // Perform facial recognition with displaying a frame for 10 seconds
+    // Perform facial recognition without displaying graphics
     perform_facial_recognition(username);
 
     return PAM_SUCCESS;  // Always grant access
