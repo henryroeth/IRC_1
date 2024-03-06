@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <opencv2/opencv.hpp>
 #include <pwd.h>
-#include <unistd.h>  // Include this header for sleep
+#include <unistd.h>
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
@@ -26,7 +26,6 @@ bool is_camera_available() {
 }
 
 // Placeholder logic for confidence level calculation
-// You may need to replace this with actual logic based on your facial recognition implementation
 double calculate_confidence_level(const std::vector<cv::Rect>& faces) {
     if (faces.empty()) {
         return 0.0;
@@ -115,7 +114,12 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
     // Perform facial recognition without displaying graphics
     perform_facial_recognition(username);
 
-    return PAM_SUCCESS;  // Always grant access
+    // Check if facial recognition failed (no camera detected)
+    if (!is_camera_available()) {
+        return PAM_AUTH_ERR;  // Authentication failure
+    }
+
+    return PAM_SUCCESS;  // Authentication success
 }
 
 // PAM credential setting function
