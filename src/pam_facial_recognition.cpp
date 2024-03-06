@@ -43,63 +43,63 @@ double calculate_confidence_level(const std::vector<cv::Rect>& faces) {
 // Function to perform facial recognition
 void perform_facial_recognition(const char *username) {
     // Check if a camera is available
-    if (!is_camera_available()) {
-        std::cout << "No camera detected!" << std::endl;
-        return;
-    }
+    if (is_camera_available()) {
+        // Get the home directory of the user
+        std::string homeDirectory = get_home_directory(username);
+        if (homeDirectory.empty()) {
+            std::cerr << "Error retrieving home directory for user " << username << "!" << std::endl;
+            return;
+        }
 
-    // Get the home directory of the user
-    std::string homeDirectory = get_home_directory(username);
-    if (homeDirectory.empty()) {
-        std::cerr << "Error retrieving home directory for user " << username << "!" << std::endl;
-        return;
-    }
+        // Specify the paths for the image and Haar cascade classifier
+        std::string imagePath = homeDirectory + "/security_image.jpg";
+        std::string cascadePath = homeDirectory + "/haarcascade_frontalface_default.xml";
 
-    // Specify the paths for the image and Haar cascade classifier
-    std::string imagePath = homeDirectory + "/security_image.jpg";
-    std::string cascadePath = homeDirectory + "/haarcascade_frontalface_default.xml";
+        // Print paths for debugging purposes
+        std::cout << "Image path: " << imagePath << std::endl;
+        std::cout << "Cascade path: " << cascadePath << std::endl;
 
-    // Print paths for debugging purposes
-    std::cout << "Image path: " << imagePath << std::endl;
-    std::cout << "Cascade path: " << cascadePath << std::endl;
+        // Load the image and Haar cascade classifier
+        cv::Mat image = cv::imread(imagePath);
+        cv::CascadeClassifier faceCascade;
 
-    // Load the image and Haar cascade classifier
-    cv::Mat image = cv::imread(imagePath);
-    cv::CascadeClassifier faceCascade;
+        // Check if the image and cascade model were loaded successfully
+        if (image.empty()) {
+            std::cerr << "Error loading image!" << std::endl;
+            return;
+        }
 
-    // Check if the image and cascade model were loaded successfully
-    if (image.empty()) {
-        std::cerr << "Error loading image!" << std::endl;
-        return;
-    }
+        if (!faceCascade.load(cascadePath)) {
+            std::cerr << "Error loading face detection model!" << std::endl;
+            return;
+        }
 
-    if (!faceCascade.load(cascadePath)) {
-        std::cerr << "Error loading face detection model!" << std::endl;
-        return;
-    }
+        // Convert the image to grayscale for face detection
+        cv::Mat grayImage;
+        cv::cvtColor(image, grayImage, cv::COLOR_BGR2GRAY);
 
-    // Convert the image to grayscale for face detection
-    cv::Mat grayImage;
-    cv::cvtColor(image, grayImage, cv::COLOR_BGR2GRAY);
+        // Detect faces using the Haar cascade
+        std::vector<cv::Rect> faces;
+        faceCascade.detectMultiScale(grayImage, faces);
 
-    // Detect faces using the Haar cascade
-    std::vector<cv::Rect> faces;
-    faceCascade.detectMultiScale(grayImage, faces);
+        // Print the number of faces found
+        std::cout << "Number of faces detected: " << faces.size() << std::endl;
 
-    // Print the number of faces found
-    std::cout << "Number of faces detected: " << faces.size() << std::endl;
+        // Display countdown message
+        std::cout << "Hold still! Time remaining: 10 seconds" << std::endl;
+        sleep(10);  // Sleep for 10 seconds
 
-    // Display countdown message
-    std::cout << "Hold still! Time remaining: 10 seconds" << std::endl;
-    sleep(10);  // Sleep for 10 seconds
-
-    // Calculate and print facial recognition statistics
-    double confidenceLevel = calculate_confidence_level(faces);
-    if (!faces.empty()) {
-        std::cout << "Facial recognition statistics for user " << username << ":" << std::endl;
-        std::cout << " - Confidence level: " << std::fixed << std::setprecision(2) << confidenceLevel * 100.0 << "%" << std::endl;
+        // Calculate and print facial recognition statistics
+        double confidenceLevel = calculate_confidence_level(faces);
+        if (!faces.empty()) {
+            std::cout << "Facial recognition statistics for user " << username << ":" << std::endl;
+            std::cout << " - Confidence level: " << std::fixed << std::setprecision(2) << confidenceLevel * 100.0 << "%" << std::endl;
+        } else {
+            std::cout << "No faces detected." << std::endl;
+        }
     } else {
-        std::cout << "No faces detected." << std::endl;
+        // No camera detected, print a message
+        std::cout << "No camera detected! Authentication without facial recognition." << std::endl;
     }
 }
 
