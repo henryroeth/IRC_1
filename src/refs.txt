@@ -1,1 +1,0 @@
-compile to .so file: g++ -o face_program face_program.cpp `pkg-config --cflags --libs opencv4`

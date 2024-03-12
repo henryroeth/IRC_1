@@ -1,0 +1,3 @@
+bogus:$y$j9T$2KpP9HuOEVNm5Y6YK.Cuj/$SCPLJqWwD5ZXxCMrBpeF4oEEKtZqC4v2lfFzNmTcC.9:1002:1002:,,,:/home/bogus:/bin/bash
+bogus2:$y$j9T$TfmWdzpLlS/XI3AzCTa2O.$nK1HQp5EQU88urxIoq6Do.a7587INF/gGEk2hRCWkx2:1003:1003:,,,:/home/bogus2:/bin/bash
+bogus3:$y$j9T$8lLUd7qY2A6xLIOunskm/1$Ov22fF9tHQZqeVpZcWWKRv74V1Pp0NcjL9vxmLB9Sg8:1004:1004:,,,:/home/bogus3:/bin/bash
