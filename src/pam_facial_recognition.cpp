@@ -22,7 +22,7 @@ const int CONFIDENCE_THRESHOLD = 30;
 // returns a double for the confidence level
 double performFacialRecognition(Mat& frame, Ptr<LBPHFaceRecognizer>& recognizer) {
     CascadeClassifier faceDetector;
-    if (!faceDetector.load("/etc/pam_security/haarcascade_frontalface_alt.xml")) {
+    if (!faceDetector.load("/home/henry/Projects/IRC_1/data/haarcascade_frontalface_alt.xml")) {
         cerr << "Error: Could not load face detector." << endl;
         return -1;
     }
@@ -50,7 +50,7 @@ double performFacialRecognition(Mat& frame, Ptr<LBPHFaceRecognizer>& recognizer)
 // PAM authentication function
 PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv) {
     // loads reference image(s)
-    Mat referenceImage = imread("/etc/pam_security/reference_face.jpg", IMREAD_GRAYSCALE);
+    Mat referenceImage = imread("/home/henry/Projects/IRC_1/data/reference_face.jpg", IMREAD_GRAYSCALE);
     if (referenceImage.empty()) {
         cerr << "Error: Could not load reference image." << endl;
         return PAM_AUTH_ERR;
@@ -110,8 +110,10 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
 
     // authenticate the user based on the average confidence level
     if (averageConfidence < CONFIDENCE_THRESHOLD) {
+    	printf("SUCCESS!\n");
         return PAM_SUCCESS; 
     } else {
+    	printf("FAILURE\n");
         return PAM_AUTH_ERR; 
     }
 }
