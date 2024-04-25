@@ -108,7 +108,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
     double averageConfidence = totalConfidence / frameCount;
     cout << "Average confidence: " << averageConfidence << endl;
 
-    // authenticate the user based on the average confidence level
+    // authenticates the user based on the average confidence level
     if (averageConfidence < CONFIDENCE_THRESHOLD) {
     	printf("SUCCESS!\n");
         return PAM_SUCCESS; 
