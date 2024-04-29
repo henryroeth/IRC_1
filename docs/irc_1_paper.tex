@@ -86,21 +86,23 @@
 \begin{abstract}
 In computer security, authentication is the process of confirming
 someone is who they claim to be when attempting to access any kind of
-computer system. It is important to always maintain and improve the
-integrity of computer systems' authentication schemes as new security
-threats arise. The Linux kernel invokes the standard Unix authentication
-process across the majority of its applications. However, as new forms
-of authentication are developed, it is inefficient to individually
-reconfigure applications such that the desired authentication scheme is
-incorporated. The PAM (Pluggable Authentication Module) mechanism
-integrates various low-level authentication schemes into a high-level
-API, allowing programs that require some form of authentication to be
-developed independently from the desired authentication scheme. This
-integrated research aims to demonstrate the function and importance of
-PAM in Linux authentication with the invocation of a face recognition
-module. Real-time face detection and recognition is performed using the
-Haar Cascade Classifier and the LBPH (Local Binary Patterns Histograms)
-feature-based face recognition method.
+computer system through the confirmation of something they have,
+something they know, or something they are. It is important to always
+maintain and improve the integrity of computer systems' authentication
+schemes as new security threats arise. The Linux kernel invokes the
+standard Unix authentication process across the majority of its
+applications. However, as new forms of authentication are developed, it
+is inefficient to individually reconfigure applications such that the
+desired authentication scheme is incorporated. The PAM (Pluggable
+Authentication Module) mechanism in Linux integrates various low-level
+authentication schemes into a high-level API, allowing programs that
+require some form of authentication to be developed independently from
+the desired authentication scheme. This integrated research aims to
+demonstrate the function and importance of PAM in Linux authentication
+with the invocation of a face recognition PAM security module. Real-time
+face detection and recognition is performed using the Haar Cascade
+Classifier and the LBPH (Local Binary Patterns Histograms) feature-based
+face recognition method.
 \end{abstract}
 
 \begin{multicols}{2}
@@ -114,21 +116,14 @@ Linux authentication involves several components. Centrally are the etc/passwd a
 
 \begin{figure}[htbp]
   \centering
-  \begin{minipage}{0.45\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{shadow_auth.png}
-    \caption{Leveraging John-The-Ripper (password cracking software) to crack bogus users' passwords with rudimentary credentials. This showcases why a Linux administrator may need to develop better authentication using PAM.}
-  \end{minipage}\hfill
-  \begin{minipage}{0.45\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{pam_configuration.png}
-    \caption{PAM configuration on the Linux kernel.}
-  \end{minipage}
+  \includegraphics[width=0.4\linewidth]{pam_configuration.png}
+  \caption{Example image 1 with a caption.}
 \end{figure}
 
 \begin{multicols}{2}
 \section{PAM Configuration}
 To be continued.
+
 \section{Authentication and Biometrics}
 To be continued.
 
