@@ -1,99 +1,134 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/face.hpp>
-#include <dlib/opencv.h>
-#include <dlib/image_processing.h>
+#include <iostream>
+#include <vector>
+#include <filesystem> // Add this header for directory_iterator
+#include <string>
+
+using namespace cv;
+using namespace cv::face;
+using namespace std;
+namespace fs = std::filesystem;
+
+const string CASCADE_PATH = "/home/henry/Projects/IRC_1/data/haarcascade_frontalface_default.xml";
+const string REFERENCE_FACES_DIR = "/home/henry/Projects/IRC_1/data/reference_faces";
+
+const int MATCH_THRESHOLD = 30; // Adjust this value as needed
 
 int main() {
-    // loads the pre-trained face detection model
-    cv::CascadeClassifier faceCascade;
-    if (!faceCascade.load(cv::samples::findFile("haarcascade_frontalface_default.xml"))) {
-        std::cerr << "Error loading face detection model!" << std::endl;
+    // Load Haar Cascade Classifier
+    CascadeClassifier faceCascade;
+    if (!faceCascade.load(CASCADE_PATH)) {
+        cerr << "Error loading face cascade.\n";
         return -1;
     }
 
-    // loads the pre-trained face recognition model
-    cv::Ptr<cv::face::LBPHFaceRecognizer> recognizer = cv::face::LBPHFaceRecognizer::create();
+    // Load LBPH model and train with reference faces
+    Ptr<LBPHFaceRecognizer> recognizer = LBPHFaceRecognizer::create();
+    vector<Mat> images;
+    vector<int> labels;
 
-    // loads the training data 
-    std::vector<cv::Mat> images;
-    std::vector<int> labels;
+    // Read reference faces from directory
+    try {
+        // Load images and labels directly without using read_csv
+        for (const auto& entry : fs::directory_iterator(REFERENCE_FACES_DIR)) {
+            if (entry.path().extension() == ".png" || entry.path().extension() == ".jpg") {
+                Mat img = imread(entry.path().string(), IMREAD_GRAYSCALE);
+                images.push_back(img);
+                // Get label from filename by parsing
+                string filename = entry.path().filename().stem();
+                size_t pos = filename.find_last_of("_");
+                int label = stoi(filename.substr(pos + 1));
+                labels.push_back(label);
+            }
+        }
+        
+        // Convert labels to the correct format (CV_32SC1)
+        Mat labelsMat(labels.size(), 1, CV_32SC1);
+        for (int i = 0; i < labels.size(); ++i) {
+            labelsMat.at<int>(i, 0) = labels[i];
+        }
 
-    // adds sample data
-    cv::Mat sampleImage = cv::imread("2024-03-04-131558.jpg", cv::IMREAD_GRAYSCALE);
-    int sampleLabel = 1;  
-
-    images.push_back(sampleImage);
-    labels.push_back(sampleLabel);
-
-    // trains the face recognition model
-    recognizer->train(images, labels);
-
-    // loads Dlib's facial landmarks predictor
-    dlib::shape_predictor landmarksPredictor;
-    dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarksPredictor;
-
-    // opens the default camera
-    cv::VideoCapture cap(0);
-    if (!cap.isOpened()) {
-        std::cerr << "Error opening camera!" << std::endl;
+        recognizer->train(images, labelsMat);
+    } catch (const cv::Exception& e) {
+        cerr << "Error training LBPH model: " << e.what() << endl;
         return -1;
     }
 
-    // creates a window
-    cv::namedWindow("Face Recognition", cv::WINDOW_AUTOSIZE);
+    // Open camera
+    VideoCapture capture(0);
+    if (!capture.isOpened()) {
+        cerr << "Error opening camera.\n";
+        return -1;
+    }
 
-    // main loop
+    Mat frame;
+    int totalFaces = 0;
+    int matchedFaces = 0;
     while (true) {
-        // reads a frame from the camera
-        cv::Mat frame;
-        cap >> frame;
+        capture >> frame;
+        if (frame.empty()) {
+            cerr << "No frame captured.\n";
+            break;
+        }
 
-        // converts the frame to grayscale for face detection
-        cv::Mat gray;
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        // Convert frame to grayscale
+        Mat grayFrame;
+        cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
+        equalizeHist(grayFrame, grayFrame);
 
-        // detects faces in the frame
-        std::vector<cv::Rect> faces;
-        faceCascade.detectMultiScale(gray, faces);
+        // Detect faces using Haar Cascade Classifier
+        vector<Rect> faces;
+        faceCascade.detectMultiScale(grayFrame, faces);
 
-        // recognizes faces and obtains confidence on facial landmarks
-        for (const auto& face : faces) {
-            cv::Mat faceROI = gray(face);
+        totalFaces = faces.size();
+        matchedFaces = 0;
 
-            // performs face recognition
+        for (const Rect& faceRect : faces) {
+            // Extract face region for recognition
+            Mat faceROI = grayFrame(faceRect);
+
+            // Perform face recognition
             int label;
             double confidence;
             recognizer->predict(faceROI, label, confidence);
 
-            // gets facial landmarks
-            dlib::cv_image<dlib::bgr_pixel> dlibImage(frame);
-            dlib::rectangle faceRect(face.x, face.y, face.x + face.width, face.y + face.height);
-            dlib::full_object_detection landmarks = landmarksPredictor(dlibImage, faceRect);
+            // Display recognition result
+            string labelString = (confidence <= MATCH_THRESHOLD) ? "Match" : "No Match";
 
-            // draws a rectangle around the detected face with confidence level
-            std::string confidenceText = "Confidence: " + std::to_string(100 - confidence);
-            cv::putText(frame, confidenceText, cv::Point(face.x, face.y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 2);
-            cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
-
-            // draws dots on facial landmarks
-            for (unsigned int i = 0; i < landmarks.num_parts(); ++i) {
-                cv::circle(frame, cv::Point(landmarks.part(i).x(), landmarks.part(i).y()), 3, cv::Scalar(0, 0, 255), -1);
+            if (confidence <= MATCH_THRESHOLD) {
+                matchedFaces++;
             }
+
+            Scalar color = (confidence <= MATCH_THRESHOLD) ? Scalar(0, 255, 0) : Scalar(0, 0, 255);
+
+            // Draw rectangle around the face with matching color
+            rectangle(frame, faceRect, color, 2);
+
+            // Display label string
+            putText(frame, labelString, Point(faceRect.x, faceRect.y - 5), FONT_HERSHEY_SIMPLEX, 0.8, color, 2);
         }
 
-        // displays the frame
-        cv::imshow("Face Recognition", frame);
+        // Display frame
+        string info = "Total Faces: " + to_string(totalFaces) + "   Matched Faces: " + to_string(matchedFaces);
+        
+        // Draw yellow box behind the text
+        int baseline = 0;
+        Size textSize = getTextSize(info, FONT_HERSHEY_SIMPLEX, 0.8, 2, &baseline);
+        rectangle(frame, Point(5, frame.rows - textSize.height - 10), Point(5 + textSize.width + 10, frame.rows - 5), Scalar(0, 255, 255), FILLED);
+        putText(frame, info, Point(10, frame.rows - 10), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 255), 2);
 
-        // checks for exit key press (ESC key)
-        char key = cv::waitKey(10);
-        if (key == 27) {  // ASCII code for ESC key
+        // Show frame
+        imshow("Face Recognition", frame);
+
+        // Check for ESC key press
+        char c = (char)waitKey(10);
+        if (c == 27) {
             break;
         }
     }
 
-    // releases the camera and closes the window
-    cap.release();
-    cv::destroyAllWindows();
-
+    capture.release();
+    destroyAllWindows();
     return 0;
 }

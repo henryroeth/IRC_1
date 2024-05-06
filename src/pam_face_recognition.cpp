@@ -13,8 +13,6 @@ using namespace std;
 #define PAM_EXTERN extern "C"
 
 // program settings
-const int FRAME_WIDTH = 1000;
-const int FRAME_HEIGHT = 800;
 const int COUNTDOWN_SECONDS = 5;
 const int CONFIDENCE_THRESHOLD = 30;
 
