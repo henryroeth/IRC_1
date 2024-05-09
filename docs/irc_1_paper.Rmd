@@ -37,6 +37,7 @@ abstract: "In computer security, authentication is the process of confirming som
 ---
 
 \begin{multicols}{2}
+
 \section{Introduction}
 The Linux kernel invokes the standard Unix authentication process across most of its applications (e.g., common-auth, sshd, su, and sudo). When developers are creating and updating applications, it would prove quite inefficient to individually reconfigure application logic such that it aligns with the newly desired authentication scheme. This would mean restructuring code and requiring other dependencies. With this in mind, developers need a way to invoke authentication schemes independently from applications, allowing for a more modular approach. This enables programs to run separately. Much like it's father kernel (Unix) the Linux kernel invokes these modular authentication schemes via the PAM (Pluggable Authentication Module) mechanism. One might think of this as a multitool. Just as a multitool can have different tools for various purposes like cutting, screwing, or opening, PAM provides different authentication methods for Linux. Depending on what you need to authenticate—be it through passwords, biometrics, or other means—you can plug in the appropriate tool/module into PAM to handle the authentication process effectively. This integrated research aims to display this function with the creation of a modular authentication scheme—face recognition.
 
@@ -47,7 +48,17 @@ Linux authentication involves several components. Centrally are the /etc/passwd 
 Hashing plays a pivotal role in Linux authentication mechanisms, safeguarding user credentials stored on the system. In Linux, password hashes are typically generated using cryptographic hash functions such as SHA-256 or SHA-512. When a user sets or updates their password, the system computes the hash of the password and stores it in the system's password file (`/etc/shadow`). When a user attempts to log in, the system hashes the provided password using the same algorithm and compares it with the stored hash in the password file. If the hashes match, access is granted. Otherwise, access is denied. This process ensures that even if an attacker gains access to the password file, obtaining the original passwords is exceedingly difficult due to the one-way nature of cryptographic hashing. According to \cite{doe2020survey}, hash functions are crucial for data integrity verification in authentication systems, emphasizing properties like collision resistance, which are essential for robust security implementations.
 
 \section{Salts}
-Salts are key in enhancing the security of password storage in Linux. When a user sets or changes their password, a random salt is generated and combined with the password before hashing. This salt is then stored alongside the hashed password in the system's password file. The purpose of the salt is to prevent attackers from using precomputed hash tables, such as rainbow tables, to quickly determine the original password from its hash. By adding a unique salt to each password before hashing, even if two users have the same password, their hashed values will be different due to the different salts used. Consequently, rainbow table attacks become impractical, as attackers would need to generate a new table for each unique salt value. This significantly increases the complexity and time required for password cracking attempts. Salting effectively mitigates various password-based attacks, thereby strengthening the overall security of the Linux authentication system \cite{smith2021importance}.
+Salts are key in enhancing the security of password storage in Linux. When a user sets or changes their password, a random salt is generated and combined with the password before hashing. This salt is then stored alongside the hashed password in the system's password file. The purpose of the salt is to prevent attackers from using precomputed hash tables, such as rainbow tables, to quickly determine the original password from its hash. By adding a unique salt to each password before hashing, even if two users have the same password, their hashed values will be different due to the different salts used. Consequently, rainbow table attacks become impractical, as attackers would need to generate a new table for each unique salt value. This significantly increases the complexity and time required for password cracking attempts. Salting effectively mitigates various password-based attacks, thereby strengthening the overall security of the Linux authentication system (\cite{smith2021importance}).
+
+\end{multicols}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.4\linewidth]{images/salting.png}
+  \caption{Linux Salting Process}
+\end{figure}
+
+\begin{multicols}{2}
 
 \section{PAM Configuration}
 Pluggable Authentication Modules (PAM) constitute a critical component of Linux systems, providing a flexible framework for authentication management. PAM enables system administrators to configure authentication policies independently of the applications requiring authentication, thus promoting modularity and security. Central to PAM's functionality are its configuration files located in `/etc/pam.d/`, which define the authentication rules for specific services or applications. These configuration files specify the modules to be invoked during authentication, such as password verification, account validation, and session management. Each module performs a specific authentication task, allowing administrators to tailor authentication mechanisms according to their security requirements. PAM modules can employ various authentication methods, including traditional password-based authentication, token-based authentication, biometric authentication, and multi-factor authentication. Additionally, PAM's modular design allows for the inclusion of custom authentication modules located in `/lib/*/security`, enabling further customization and integration with external authentication services, such as LDAP or Kerberos. This flexibility, coupled with PAM's extensibility, makes it a cornerstone of Linux security, facilitating robust authentication mechanisms that can adapt to diverse system architectures and security policies (\cite{jones2022importance}). 
@@ -56,15 +67,60 @@ Pluggable Authentication Modules (PAM) constitute a critical component of Linux 
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.4\linewidth]{pam_configuration.png}
+  \includegraphics[width=0.4\linewidth]{images/pam_configuration.png}
   \caption{PAM System Framework}
 \end{figure}
 
 \begin{multicols}{2}
+
 \section{Biometrics}
-Biometrics, a field at the intersection of computer science and biology, offers innovative solutions for identity verification and access control. It involves the measurement and analysis of unique physical or behavioral characteristics to establish an individual's identity. Unlike traditional authentication methods like passwords or tokens, which can be lost, stolen, or forgotten, biometric traits are inherently linked to a person and are difficult to replicate. Biometric systems typically capture data from various sources, including fingerprints, iris patterns, facial features, voice patterns, and even behavioral traits like gait or typing patterns. These biometric data are then processed and converted into mathematical representations, often referred to as templates or biometric signatures. During authentication, a user's biometric data is captured and compared against the stored template in a database. If the biometric features match within an acceptable threshold, access is granted. The use of biometrics offers several advantages, including increased security, convenience, and resistance to fraud. However, challenges such as privacy concerns, accuracy, and susceptibility to spoofing techniques remain significant areas of research and development in the field. Nonetheless, with advancements in technology and algorithms, biometrics continues to gain traction in various domains, including law enforcement, border control, banking, and mobile devices \cite{wang2023introduction}.
+Biometrics, a field at the intersection of computer science and biology, offers innovative solutions for identity verification and access control. It involves the measurement and analysis of unique physical or behavioral characteristics to establish an individual's identity. Unlike traditional authentication methods like passwords or tokens, which can be lost, stolen, or forgotten, biometric traits are inherently linked to a person and are difficult to replicate. Biometric systems typically capture data from various sources, including fingerprints, iris patterns, facial features, voice patterns, and even behavioral traits like gait or typing patterns. These biometric data are then processed and converted into mathematical representations, often referred to as templates or biometric signatures. During authentication, a user's biometric data is captured and compared against the stored template in a database. If the biometric features match within an acceptable threshold, access is granted. The use of biometrics offers several advantages, including increased security, convenience, and resistance to fraud. However, challenges such as privacy concerns, accuracy, and susceptibility to spoofing techniques remain significant areas of research and development in the field. Nonetheless, with advancements in technology and algorithms, biometrics continues to gain traction in various domains, including law enforcement, border control, banking, and mobile devices (\cite{wang2023introduction}).
+
+\section{Machine Learning}
+
+Machine learning, a subset of artificial intelligence, has revolutionized various fields by enabling systems to learn from data and make predictions or decisions without explicit programming. In the context of face recognition, machine learning algorithms play a pivotal role in extracting meaningful features from facial images and identifying patterns that distinguish one individual from another. These algorithms can be trained on vast datasets of labeled facial images, learning to recognize unique facial characteristics such as the arrangement of eyes, nose, and mouth, as well as more subtle cues like skin texture and facial expressions. Convolutional Neural Networks (CNNs) are particularly effective for face recognition tasks, leveraging hierarchical layers to automatically learn relevant features at different levels of abstraction. Additionally, techniques like transfer learning allow pre-trained models to be fine-tuned on specific face recognition tasks, enhancing performance even with limited training data. Despite the remarkable progress in face recognition enabled by machine learning, challenges such as robustness to variations in pose, illumination, and occlusion persist, driving ongoing research efforts to develop more accurate and reliable face recognition systems (\cite{schwarz2021machine}). Furthermore, within the realm of face recognition, one prominent method that leverages machine learning techniques is Local Binary Pattern Histograms (LBPH). LBPH is a texture-based approach that captures local patterns in an image and constructs histograms of these patterns to represent the image's texture. This method has gained popularity for its simplicity, computational efficiency, and effectiveness, particularly in scenarios with limited training data or computational resources. By incorporating machine learning principles, LBPH algorithms can adapt and learn discriminative patterns from facial images, contributing to the advancement of robust and accurate face recognition systems.
+
+\section{Haar Cascade Classifier}
+The Haar Cascade Classifier is a widely used object detection algorithm in computer vision, particularly in tasks such as face detection. Developed by Viola and Jones in 2001, this method utilizes a set of simple rectangular features called Haar-like features, which are extracted from image windows at different scales and positions. These features are then fed into a cascade of classifiers, each of which efficiently distinguishes between regions of an image that likely contain the object of interest and those that do not. The cascade structure allows for fast rejection of non-object regions, enabling real-time processing of images or video streams. While originally introduced for face detection, the Haar Cascade Classifier has since been applied to various object detection tasks, demonstrating its versatility and effectiveness in detecting objects in complex scenes (\cite{viola2004robust}).
 
 \end{multicols}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.4\linewidth]{images/haar_features.png}
+  \caption{Haar-Like Features}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.4\linewidth]{images/haar_features_1.png}
+  \caption{Application of Haar-Like Features}
+\end{figure}
+
+\begin{multicols}{2}
+
+\section{Local Binary Pattern Historgrams}
+Local Binary Patterns (LBPH) remains a stalwart in face recognition, esteemed for its robustness and adaptability to diverse conditions. This method dissects facial images into local neighborhoods, each representing a distinct region of interest. LBPH meticulously examines texture information encoded in pixel intensity values. Its process involves assessing the relationship between the central pixel and its surrounding neighbors, encapsulated within a circular neighborhood. Herein lies LBPH's efficacy: binary encoding of this relationship. For each pixel, LBPH determines whether its intensity surpasses or falls short of its neighbors'. Pixels with higher intensities receive a binary value of 1; otherwise, they receive 0. This binary representation, akin to a digital fingerprint, captures intricate texture details intrinsic to the facial region. By traversing the entire image and repeating this process for every pixel, LBPH assembles a comprehensive mosaic of texture patterns, each encoded into a binary string. These strings, emblematic of the texture variations within each neighborhood, are transformed into decimal values. LBPH distills these values into histograms, encapsulating texture within each neighborhood. Subsequently, these histograms, akin to miniature texture portraits, are concatenated into a feature vector, emblematic of the entire facial image. LBPH transcends limitations of traditional face recognition techniques, surmounting challenges posed by illumination variations, pose changes, and facial expressions (\cite{ahonen2004}; \cite{tan2007}). Thus, LBPH emerges as an efficient method in face recognition, indispensable in applications from security systems to human-computer interaction interfaces.
+
+\end{multicols}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.4\linewidth]{images/lbph.png}
+  \caption{Local Binary Pattern}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.4\linewidth]{images/lbph_1.png}
+  \caption{LBP Application}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.4\linewidth]{images/lbph_2.png}
+  \caption{Decimal Value Calculation Process}
+\end{figure}
 
 \bibliographystyle{apalike}
 \bibliography{irc_1_ref.bib}
