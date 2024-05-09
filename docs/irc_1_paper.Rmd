@@ -125,7 +125,7 @@ Local Binary Patterns (LBPH) remains a stalwart in face recognition, esteemed fo
 \begin{multicols}{2}
 
 \section{PAM Configuraiton Files}
-PAM configuration files serve as the cornerstone of user authentication in Linux systems, orchestrating a seamless interaction between applications and authentication mechanisms. At the crux of PAM configuration files lie policy lines, delineating the authentication process for specific applications in great detail. Each policy line comprises several fields, meticulously crafted to orchestrate a tailored authentication workflow. The first field, the module type, specifies the category of authentication module to be invoked, ranging from account and session management to the actual authentication logic. Following this, the control flag dictates the behavior of the module, controlling aspects such as whether authentication is required to proceed (required), whether failure should halt the authentication process (requisite), or whether the success of one module should automatically grant access (sufficient). Subsequently, the module path denotes the location of the authentication module's executable file, facilitating its invocation during the authentication process. Parameters, the next field, enable fine-grained customization of module behavior, allowing administrators to specify additional options or configurations. Each parameter is passed to the module upon invocation, influencing its execution and outcome. Through judicious arrangement and configuration of these policy lines, administrators can tailor authentication workflows to meet the security requirements of individual applications, ensuring a fine balance between security and usability. When an application requests authentication, PAM dynamically assembles the configured modules and executes them in the specified order, passing control from one module to the next in a stack-like structure. Each module performs a specific authentication task, such as verifying passwords, checking user permissions, or enforcing multifactor authentication. By abstracting authentication from application logic, PAM enhances system security and simplifies management, facilitating centralized control over authentication policies across the entire system (\cite{stallings2020}; \cite{love2010}).
+PAM configuration files serve as the cornerstone of user authentication in Linux systems, orchestrating a seamless interaction between applications and authentication mechanisms. At the crux of PAM configuration files lie policy lines, delineating the authentication process for specific applications in great detail. Each policy line comprises several fields, meticulously crafted to orchestrate a tailored authentication workflow. The first field, the module type, specifies the category of authentication module to be invoked, ranging from account and session management to the actual authentication logic. Following this, the control flag dictates the behavior of the module, controlling aspects such as whether authentication is required to proceed (required), whether failure should halt the authentication process (requisite), or whether the success of one module should automatically grant access (sufficient). Subsequently, the module path denotes the location of the authentication module's executable file, facilitating its invocation during the authentication process. Parameters, the next field, enable fine-grained customization of module behavior, allowing administrators to specify additional options or configurations. Each parameter is passed to the module upon invocation, influencing its execution and outcome. Through judicious arrangement and configuration of these policy lines, administrators can tailor authentication workflows to meet the security requirements of individual applications, ensuring a fine balance between security and usability. When an application requests authentication, PAM dynamically assembles the configured modules and executes them in the specified order, passing control from one module to the next in a stack-like structure. Each module performs a specific authentication task, such as verifying passwords, checking user permissions, or enforcing multi-factor authentication. By abstracting authentication from application logic, PAM enhances system security and simplifies management, facilitating centralized control over authentication policies across the entire system (\cite{stallings2020}; \cite{love2010}).
 
 \end{multicols}
 
@@ -134,6 +134,82 @@ PAM configuration files serve as the cornerstone of user authentication in Linux
   \includegraphics[width=0.4\linewidth]{images/common-auth.png}
   \caption{Module Invocation in `common-auth` PAM Configuration File}
 \end{figure}
+
+\begin{multicols}{2}
+
+\section{Face Recognition Development}
+The face recognition demo developed in this research exemplifies a robust face recognition system leveraging OpenCV, a powerful computer vision library. At its core, the system integrates two crucial components: a Haar Cascade Classifier for face detection and a Local Binary Patterns Histograms (LBPH) model for face recognition. Firstly, the code initializes the Haar Cascade Classifier by loading a pre-trained model from the specified path \( \text{'CASCADE\_PATH'} \). This classifier detects faces within a video frame by identifying characteristic patterns indicative of facial features. Subsequently, the LBPH model is instantiated using the \( \text{'LBPHFaceRecognizer'} \) class, enabling facial recognition based on texture patterns. The LBPH model is trained with reference faces obtained from the directory specified by \( \text{'REFERENCE\_FACES\_DIR'} \). During training, images are loaded, converted to grayscale, and processed to extract facial features. The LBPH model then learns to associate each face with a corresponding label, facilitating subsequent recognition. Upon model training, the code initializes the camera for real-time face recognition. Each frame captured by the camera undergoes grayscale conversion and histogram equalization to enhance feature contrast. The Haar Cascade Classifier is then employed to detect faces within the frame. Detected faces are passed to the LBPH model for recognition, wherein each face is classified based on its texture pattern. If a match is found with sufficient confidence (determined by \( \text{'MATCH\_THRESHOLD'} \)), the recognized face is marked accordingly. Finally, the code displays the recognition results in real-time, annotating each recognized face with a label and providing information about the total number of faces detected and the number of faces matched. Through this integration of Haar Cascade Classifier and LBPH model, the system achieves robust and efficient face recognition, suitable for diverse applications ranging from security systems to personalized user interfaces (\cite{deng2010}; \cite{ahonen2004}). Below is how the Haar Cascade Classifier and the LBPH model are referenced in the program. Documentation on this can be found at the OpenCV documentation website.
+
+
+\begin{verbatim}
+// Load Haar Cascade Classifier
+CascadeClassifier faceCascade;
+if (!faceCascade.load(CASCADE_PATH)) {
+    cerr << "Error loading face cascade.\n";
+    return -1;
+}
+
+// Load LBPH model and train with reference faces
+Ptr<LBPHFaceRecognizer> recognizer = 
+LBPHFaceRecognizer::create();
+vector<Mat> images;
+vector<int> labels;
+\end{verbatim}
+
+\end{multicols}
+
+\begin{multicols}{2}
+
+\section{Integration with PAM}
+Using the previously mentioned facial recognition logic using OpenCV, results are integrated with PAM for authentication purposes. Here's a brief overview of how the logic is integrated: The code utilizes OpenCV's face detection and recognition functionalities to perform facial recognition. It loads a reference image, creates an LBPH face recognizer, and trains it with the reference image. The authentication process begins by counting down and notifying the user to hold still for recording. After the countdown, the code records video frames for 5 seconds and performs facial recognition on each frame, calculating the average confidence level based on the recognition results. The integration with PAM is achieved through the implementation of PAM authentication functions, which handle user authentication, credential setting, session opening, and session closing. The authentication function authenticates the user based on the average confidence level obtained from facial recognition, where if the confidence level is below a predefined threshold, authentication succeeds; otherwise, it fails. As for documentation on the PAM library for C++, there isn't official documentation specifically for C++ usage; however, you can refer to the man pages and various online resources for information on using PAM in C and C++ programs. The following is showcasing the data collection process and calculation of confidence levels of dissimilarity (how confident the model is that the probe image is not the same as that of the trained model with the gallery images). The confidence levels are calculated via the `performFacialRecognition` function, which implements the same kind of recognition logic previously shown.
+
+\begin{verbatim}
+while (chrono::steady_clock::now() - start < 
+chrono::seconds(5)) {
+    Mat frame;
+    cap >> frame;
+
+    if (frame.empty()) {
+        cerr << "Error: Failed to capture frame." 
+        << endl;
+        return PAM_AUTH_ERR;
+    }
+
+    // converts the frame to grayscale for image 
+    analysis
+    Mat grayFrame;
+    cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
+
+    // performs facial recognition on the frame
+    double confidence = 
+    performFacialRecognition(grayFrame, recognizer);
+    if (confidence < 0) {
+        cerr << "Error: Facial recognition failed." 
+        << endl;
+        return PAM_AUTH_ERR;
+}
+
+    totalConfidence += confidence;
+    frameCount++;
+\end{verbatim}
+
+\end{multicols}
+
+\begin{multicols}{2}
+
+\section{Configuration of Module}
+
+
+\section{Runtime Errors}
+
+
+\section{Results and Evaluation}
+
+
+\section{Conclusion and Future Work}
+
+
+\end{multicols}
 
 \bibliographystyle{apalike}
 \bibliography{irc_1_ref.bib}
