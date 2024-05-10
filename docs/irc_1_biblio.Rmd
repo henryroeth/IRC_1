@@ -1,6 +1,6 @@
 ---
 title: Annotated Bibliography
-author: Your Name
+author: Henry Roeth
 date: 2024-02-16
 output: pdf_document
 bibliography: irc_1_ref.bib
